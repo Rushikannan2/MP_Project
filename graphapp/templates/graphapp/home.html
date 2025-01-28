@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphical Method Solver</title>
+</head>
+<body>
+    <h1>Graphical Method Solver</h1>
+    <form method="post" action="{% url 'graphapp:solve' %}">
+        {% csrf_token %}
+        <label for="num_constraints">Enter Number of Constraints:</label>
+        <input type="number" id="num_constraints" name="num_constraints" required><br><br>
+
+        <label for="objective_function">Enter Objective Function (comma-separated, e.g., "50,18"):</label>
+        <input type="text" id="objective_function" name="objective_function" placeholder="e.g., 50,18" required><br><br>
+
+        <label for="constraints">Enter Constraints (semicolon-separated, e.g., "2 1<=100;1 1<=80;1 0>=0;0 1>=0"):</label>
+        <textarea id="constraints" name="constraints" required></textarea><br><br>
+
+        <button type="submit">Solve</button>
+    </form>
+
+    {% if result %}
+        <h2>Solution:</h2>
+        <p>{{ result }}</p>
+        <h3>Graph:</h3>
+        <img src="{{ graph_url }}" alt="Graph" />
+    {% endif %}
+</body>
+</html>
