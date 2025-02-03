@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linear Programming Solvers</title>
+    <title>Transportation Problem Solver</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        /* Background Animation */
+        /* Animated Gradient Background */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -20,7 +20,6 @@
             animation: gradientBG 10s ease infinite;
             overflow: hidden;
         }
-
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -39,13 +38,12 @@
             color: white;
             animation: fadeIn 1.5s ease-out;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Navigation Bar */
+        /* Navigation Links */
         .nav-links {
             margin-bottom: 20px;
         }
@@ -118,14 +116,13 @@
 </head>
 <body>
     <div class="solver-container">
-        <!-- Added navigation links -->
         <div class="nav-links">
             <a href="{% url 'graphapp:home' %}">Graphical Method</a>
             <a href="{% url 'graphapp:transportation' %}">Transportation Problem</a>
             <a href="{% url 'graphapp:simplex' %}">Simplex Method</a>
         </div>
 
-        <h1>Graphical Method Solver</h1>
+        <h1>Transportation Problem Solver</h1>
 
         {% if error %}
             <div style="color: red; margin-bottom: 15px;">
@@ -133,25 +130,22 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% url 'graphapp:solve' %}">
+        <form method="post" action="{% url 'graphapp:solve_transportation' %}">
             {% csrf_token %}
             
             <div class="form-group">
-                <label for="num_constraints">Number of Constraints:</label>
-                <input type="number" id="num_constraints" name="num_constraints" 
-                       min="2" required placeholder="Enter number of constraints">
+                <label>Enter cost matrix (semicolon-separated rows, space-separated columns):</label>
+                <textarea name="cost_matrix" rows="4" placeholder="Example: 2 3 1;5 4 8;5 6 8" required></textarea>
             </div>
 
             <div class="form-group">
-                <label for="objective_function">Objective Function Coefficients:</label>
-                <input type="text" id="objective_function" name="objective_function" 
-                       required placeholder="Example: 50,18 (for Maximize 50x1 + 18x2)">
+                <label>Enter supply values (space-separated):</label>
+                <input type="text" name="supply" placeholder="Example: 20 30 25" required>
             </div>
 
             <div class="form-group">
-                <label for="constraints">Constraints:</label>
-                <textarea id="constraints" name="constraints" rows="3" 
-                          required placeholder="Example: 2 1<=100;1 1<=80;1 0>=0;0 1>=0"></textarea>
+                <label>Enter demand values (space-separated):</label>
+                <input type="text" name="demand" placeholder="Example: 10 25 40" required>
             </div>
 
             <button type="submit">Solve</button>
@@ -160,11 +154,17 @@
         {% if result %}
             <div class="result-section">
                 <h2>Solution</h2>
-                <p>{{ result }}</p>
+                <p>Total Cost: {{ result.total_cost|floatformat:2 }}</p>
+                <p>Status: {{ result.status }}</p>
                 
-                {% if graph_url %}
-                    <h3>Feasible Region</h3>
-                    <img src="{{ graph_url }}" alt="Graphical Solution" style="border-radius: 8px;">
+                {% if cost_matrix_url %}
+                    <h3>Cost Matrix:</h3>
+                    <img src="{{ cost_matrix_url }}" alt="Cost Matrix" style="border-radius: 8px;">
+                {% endif %}
+                
+                {% if solution_matrix_url %}
+                    <h3>Solution Matrix:</h3>
+                    <img src="{{ solution_matrix_url }}" alt="Solution Matrix" style="border-radius: 8px;">
                 {% endif %}
             </div>
         {% endif %}

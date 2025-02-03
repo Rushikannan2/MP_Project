@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplex Method Solver</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        /* Use the same CSS styles from home.html */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #00c6ff, #0072ff, #ff6b6b, #ff3e3e);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .solver-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            color: white;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        /* Keep all other styles the same as home.html */
+        /* ... */
+    </style>
+</head>
+<body>
+    <div class="solver-container">
+        <div class="nav-links">
+            <a href="{% url 'graphapp:home' %}">Graphical Method</a>
+            <a href="{% url 'graphapp:transportation' %}">Transportation Problem</a>
+            <a href="{% url 'graphapp:simplex' %}">Simplex Method</a>
+        </div>
+
+        <h1>Simplex Method Solver</h1>
+
+        {% if error %}
+            <div style="color: red; margin-bottom: 15px;">
+                <strong>Error:</strong> {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'graphapp:solve_simplex' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Optimization Type:</label>
+                <select name="objective_type" style="background: rgba(255, 255, 255, 0.2); color: white; border: none; border-radius: 8px; padding: 8px;">
+                    <option value="max">Maximize</option>
+                    <option value="min">Minimize</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="objective_function">Objective Function Coefficients:</label>
+                <input type="text" id="objective_function" name="objective_function" 
+                       required placeholder="Example: 3,2 (for 3x1 + 2x2)">
+            </div>
+
+            <div class="form-group">
+                <label for="constraints">Constraints:</label>
+                <textarea id="constraints" name="constraints" rows="6" 
+                          required placeholder="Example: 1 2 <= 20;4 3 <= 30;1 0 >= 0;0 1 >= 0"></textarea>
+            </div>
+
+            <button type="submit">Solve</button>
+        </form>
+
+        {% if result %}
+            <div class="result-section">
+                <h2>Solution</h2>
+                <p><strong>Status:</strong> {{ result.status }}</p>
+                
+                {% if result.optimal_value is not None %}
+                    <p><strong>Optimal Value:</strong> {{ result.optimal_value|floatformat:2 }}</p>
+                    <h3>Variables:</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        {% for var in result.variables %}
+                            <li>x{{ forloop.counter }} = {{ var|floatformat:2 }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p><strong>Iterations:</strong> {{ result.iterations }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Animate form elements
+        gsap.to(".form-group", {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "easeOut"
+        });
+    </script>
+</body>
+</html>

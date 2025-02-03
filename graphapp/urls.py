@@ -6,4 +6,8 @@ app_name = 'graphapp'
 urlpatterns = [
     path('', views.home, name='home'),
     path('solve/', views.solve, name='solve'),
+    path('transportation/', views.transportation_view, name='transportation'),
+    path('solve-transportation/', views.solve_transportation, name='solve_transportation'),
+    path('simplex/', views.simplex_view, name='simplex'),
+    path('solve-simplex/', views.solve_simplex, name='solve_simplex'),
 ]
