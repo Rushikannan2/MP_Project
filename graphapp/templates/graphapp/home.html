@@ -6,6 +6,58 @@
     <title>Linear Programming Solvers</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
+        /* Add new styles for sections */
+        .intro-section {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #1e2a3b;
+        }
+
+        .intro-section h2 {
+            color: #ffcc00;
+            font-size: 24px;
+        }
+
+        .intro-section p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .applications-section {
+            background-color: rgba(0, 123, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .applications-section h3 {
+            color: #ff6b6b;
+            font-size: 22px;
+        }
+
+        .applications-section ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        .applications-section li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .applications-section li::before {
+            content: "•";
+            color: #ffd700;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Existing styles below remain unchanged */
         /* Background Animation */
         body {
             font-family: 'Poppins', sans-serif;
@@ -118,7 +170,6 @@
 </head>
 <body>
     <div class="solver-container">
-        <!-- Added navigation links -->
         <div class="nav-links">
             <a href="{% url 'graphapp:home' %}">Graphical Method</a>
             <a href="{% url 'graphapp:transportation' %}">Transportation Problem</a>
@@ -133,6 +184,24 @@
             </div>
         {% endif %}
 
+        <!-- Added Intro Section -->
+        <div class="intro-section">
+            <h2>About the Graphical Method</h2>
+            <p>The Graphical Method is a visual technique for solving linear programming problems with two variables by plotting constraints and identifying the optimal solution at the vertices of the feasible region.</p>
+        </div>
+
+        <!-- Added Applications Section -->
+        <div class="applications-section">
+            <h3>Key Applications</h3>
+            <ul>
+                <li>Optimizing production plans in manufacturing</li>
+                <li>Maximizing profit in business operations</li>
+                <li>Minimizing costs in resource allocation</li>
+                <li>Solving diet optimization problems</li>
+            </ul>
+        </div>
+
+        <!-- Original Form Section (Unchanged) -->
         <form method="post" action="{% url 'graphapp:solve' %}">
             {% csrf_token %}
             

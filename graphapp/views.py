@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import numpy as np
+import re
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from matplotlib.patches import Polygon
 from scipy.spatial import ConvexHull
 from scipy.optimize import linprog
-from matplotlib import gridspec
 
-# Existing Graphical Method Views
+# Graphical Method Views
 def home(request):
     return render(request, 'graphapp/home.html')
 
@@ -19,23 +19,28 @@ def solve(request):
             c_input = request.POST.get('objective_function')
             constraints_input = request.POST.get('constraints')
 
+            # Here we assume objective coefficients are comma separated.
             c = list(map(float, c_input.split(',')))
             A, b = [], []
 
             for constraint in constraints_input.split(';'):
-                if '<=' in constraint:
-                    parts = constraint.split('<=')
-                    coeffs = list(map(float, parts[0].split()))
-                    rhs = float(parts[1])
-                elif '>=' in constraint:
-                    parts = constraint.split('>=')
-                    coeffs = list(map(float, parts[0].split()))
-                    rhs = float(parts[1])
+                constraint = constraint.strip()
+                if not constraint:
+                    continue
+                
+                # Handle different constraint types
+                match = re.match(r"^(.*?)(<=|>=)(.*?)$", constraint)
+                if not match:
+                    continue  # Skip invalid constraints
+                
+                lhs_str, op, rhs_str = match.groups()
+                coeffs = list(map(float, lhs_str.strip().split()))
+                rhs = float(rhs_str.strip())
+                
+                if op == '>=':
                     coeffs = [-x for x in coeffs]
                     rhs = -rhs
-                else:
-                    continue
-
+                
                 A.append(coeffs)
                 b.append(rhs)
 
@@ -45,8 +50,10 @@ def solve(request):
                 'graph_url': graph_url,
             })
         except Exception as e:
-            return HttpResponse(f"Error: {e}")
-    return HttpResponse("Invalid request")
+            return render(request, 'graphapp/home.html', {
+                'error': f"Error: {str(e)}"
+            })
+    return redirect('graphapp:home')
 
 # Transportation Problem Views
 def transportation_view(request):
@@ -55,9 +62,11 @@ def transportation_view(request):
 def solve_transportation(request):
     if request.method == 'POST':
         try:
+            # Parse the cost matrix, supply and demand from POST data.
             cost_matrix = [
                 list(map(float, row.split()))
                 for row in request.POST['cost_matrix'].split(';')
+                if row.strip()
             ]
             supply = list(map(float, request.POST['supply'].split()))
             demand = list(map(float, request.POST['demand'].split()))
@@ -65,7 +74,7 @@ def solve_transportation(request):
             result = solve_transportation_problem(cost_matrix, supply, demand)
             cost_matrix_img = plot_matrix(cost_matrix, "Cost Matrix")
             solution_matrix_img = plot_matrix(
-                result['solution'].tolist() if result['solution'] is not None else [],
+                result['transport_plan'].tolist() if result['transport_plan'] is not None else [],
                 "Solution Matrix"
             )
 
@@ -88,68 +97,88 @@ def simplex_view(request):
 def solve_simplex(request):
     if request.method == 'POST':
         try:
-            # Parse input data
+            # Parse objective function (expects comma-separated values)
             objective_type = request.POST.get('objective_type', 'max')
-            c_input = list(map(float, request.POST['objective_function'].split(',')))
-            constraints = []
-            
-            # Parse constraints
-            for constraint in request.POST['constraints'].split(';'):
-                parts = constraint.strip().split()
-                coeffs = list(map(float, parts[:-2]))
-                inequality = parts[-2]
-                rhs = float(parts[-1])
-                
-                # Convert >= constraints to <= form
-                if inequality == '>=':
-                    coeffs = [-x for x in coeffs]
-                    rhs = -rhs
-                    inequality = '<='
-                
-                constraints.append({
-                    'coeffs': coeffs,
-                    'rhs': rhs,
-                    'inequality': inequality
-                })
+            c_input = request.POST['objective_function'].strip()
+            c = list(map(float, c_input.split(',')))
+            num_vars = len(c)
 
-            # Set up problem for linprog
-            A = [con['coeffs'] for con in constraints]
-            b = [con['rhs'] for con in constraints]
+            # Initialize constraint matrices
+            A_ub, b_ub = [], []
+            A_eq, b_eq = [], []
 
-            # Convert maximization to minimization
+            # Allow constraints to be separated by semicolon OR newline.
+            raw_constraints = re.split(r';|\n', request.POST['constraints'])
+            for constraint in raw_constraints:
+                constraint = constraint.strip()
+                if not constraint:
+                    continue
+
+                # Expect a format like "1 1 1 <= 10"
+                match = re.match(r"^(.*?)(<=|>=|=)(.*?)$", constraint)
+                if not match:
+                    raise ValueError(f"Invalid constraint format: '{constraint}'")
+
+                lhs_str, op, rhs_str = match.groups()
+                
+                # Parse coefficients (space-separated)
+                coeffs = list(map(float, lhs_str.strip().split()))
+                if len(coeffs) != num_vars:
+                    raise ValueError(f"Constraint '{constraint}' has {len(coeffs)} coefficients, expected {num_vars}")
+
+                # Parse RHS value
+                rhs = float(rhs_str.strip())
+
+                # Handle constraint types
+                if op == '<=':
+                    A_ub.append(coeffs)
+                    b_ub.append(rhs)
+                elif op == '>=':
+                    A_ub.append([-x for x in coeffs])
+                    b_ub.append(-rhs)
+                elif op == '=':
+                    A_eq.append(coeffs)
+                    b_eq.append(rhs)
+
+            # Convert maximization to minimization (if needed)
             if objective_type == 'max':
-                c = [-x for x in c_input]
-            else:
-                c = c_input
+                c = [-x for x in c]
 
-            # Solve using simplex
-            result = linprog(c=c, A_ub=A, b_ub=b, method='highs')
+            # Solve using linprog
+            result = linprog(
+                c=c,
+                A_ub=A_ub if A_ub else None,
+                b_ub=b_ub if b_ub else None,
+                A_eq=A_eq if A_eq else None,
+                b_eq=b_eq if b_eq else None,
+                bounds=(0, None),
+                method='highs'
+            )
 
-            # Process results
+            # Prepare solution details
+            solution = {
+                'optimal_value': None,
+                'variables': None,
+                'status': result.message,
+                'iterations': result.nit
+            }
+
             if result.success:
-                solution = {
-                    'optimal_value': -result.fun if objective_type == 'max' else result.fun,
-                    'variables': result.x.tolist(),
-                    'status': 'Optimal solution found',
-                    'iterations': result.nit
-                }
-            else:
-                solution = {
-                    'optimal_value': None,
-                    'variables': None,
-                    'status': result.message,
-                    'iterations': 0
-                }
+                solution['optimal_value'] = abs(result.fun) if objective_type == 'max' else result.fun
+                solution['variables'] = [round(x, 4) for x in result.x] if result.x is not None else []
+                solution['status'] = 'Optimal solution found'
 
             return render(request, 'graphapp/simplex.html', {
                 'result': solution,
                 'objective_type': objective_type,
-                'num_vars': len(c_input)
+                'num_vars': num_vars,
+                'constraint_count': len(A_ub) + len(A_eq)
             })
 
         except Exception as e:
             return render(request, 'graphapp/simplex.html', {
-                'error': f"Error processing input: {str(e)}"
+                'error': f"Input error: {str(e)}",
+                'preserve_input': True
             })
     return redirect('graphapp:simplex')
 
@@ -187,28 +216,32 @@ def solve_transportation_problem(cost_matrix, supply, demand):
     m, n = cost_matrix.shape
     c = cost_matrix.flatten()
 
-    # Build equality constraints
+    # Build equality constraints for supply and demand.
     A_eq = []
+    # For supply constraints: Each row's sum equals supply.
     for i in range(m):
-        A_eq.append([1 if (i * n) <= j < ((i + 1) * n) else 0 for j in range(m * n)])
+        row = [1 if (i * n) <= j < ((i + 1) * n) else 0 for j in range(m * n)]
+        A_eq.append(row)
+    # For demand constraints: Each column's sum equals demand.
     for j in range(n):
-        A_eq.append([1 if (k % n) == j else 0 for k in range(m * n)])
+        col = [1 if (k % n) == j else 0 for k in range(m * n)]
+        A_eq.append(col)
 
     b_eq = np.concatenate([supply, demand])
 
     result = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=(0, None), method='highs')
 
     if result.success:
-        solution_matrix = result.x.reshape(m, n)
+        solution_matrix = result.x.reshape(m, n).round(4)
         return {
-            "solution": solution_matrix,
-            "total_cost": result.fun,
+            "transport_plan": solution_matrix,
+            "optimal_cost": round(result.fun, 4),
             "status": "Optimal solution found",
         }
     else:
         return {
-            "solution": None,
-            "total_cost": None,
+            "transport_plan": None,
+            "optimal_cost": None,
             "status": result.message,
         }
 
@@ -219,7 +252,7 @@ def call_solver(c, A, b):
         optimal_vertex, optimal_value = solve_linear_program(c, A, b, buf)
         buf.seek(0)
         graph_url = f"data:image/png;base64,{base64.b64encode(buf.read()).decode('utf-8')}"
-        return graph_url, f"Optimal solution: {optimal_vertex}, Z = {optimal_value}"
+        return graph_url, f"Optimal solution: {np.round(optimal_vertex, 4)}, Z = {round(optimal_value, 4)}"
     except Exception as e:
         return None, f"Error: {str(e)}"
 

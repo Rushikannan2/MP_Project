@@ -6,7 +6,7 @@
     <title>Simplex Method Solver</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        /* Use the same CSS styles from home.html */
+        /* Animated Gradient Background */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -20,13 +20,13 @@
             animation: gradientBG 10s ease infinite;
             overflow: hidden;
         }
-
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
+        /* Glassmorphism Card */
         .solver-container {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -38,9 +38,109 @@
             color: white;
             animation: fadeIn 1.5s ease-out;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Keep all other styles the same as home.html */
-        /* ... */
+        /* Navigation Links */
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #ffd700;
+        }
+
+        /* Form Inputs */
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Button Animation */
+        button {
+            background: #ffd700;
+            color: black;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+        }
+        button:hover {
+            background: #ffcc00;
+            transform: scale(1.05);
+        }
+
+        /* Result Section */
+        .result-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        /* GSAP Animation for Form */
+        .form-group {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        /* Brief Introduction */
+        .intro-section {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #1e2a3b;
+        }
+        .intro-section h2 {
+            color: #ffcc00;
+            font-size: 24px;
+        }
+        .intro-section p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .applications-section {
+            background-color: rgba(0, 123, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            color: white;
+        }
+        .applications-section h3 {
+            color: #ff6b6b;
+            font-size: 22px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .solver-container {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -59,27 +159,35 @@
             </div>
         {% endif %}
 
+        <div class="intro-section">
+            <h2>What is the Simplex Method?</h2>
+            <p>The Simplex Method is an algorithm used for solving linear programming problems. It is widely used in various fields such as economics, operations research, and logistics to find the best possible solution to optimization problems.</p>
+        </div>
+
+        <div class="applications-section">
+            <h3>Applications of the Simplex Method</h3>
+            <ul>
+                <li>Optimizing production schedules in manufacturing.</li>
+                <li>Resource allocation in supply chain management.</li>
+                <li>Cost minimization in transportation and logistics.</li>
+                <li>Maximizing profit in finance and investment problems.</li>
+                <li>Improving decision-making in business operations.</li>
+            </ul>
+        </div>
+
         <form method="post" action="{% url 'graphapp:solve_simplex' %}">
             {% csrf_token %}
-            
+
             <div class="form-group">
-                <label>Optimization Type:</label>
-                <select name="objective_type" style="background: rgba(255, 255, 255, 0.2); color: white; border: none; border-radius: 8px; padding: 8px;">
-                    <option value="max">Maximize</option>
-                    <option value="min">Minimize</option>
-                </select>
+                <label>Enter Objective Function Coefficients (comma-separated):</label>
+                <input type="text" name="objective_function" placeholder="Example: 3,2,5" required>
             </div>
 
             <div class="form-group">
-                <label for="objective_function">Objective Function Coefficients:</label>
-                <input type="text" id="objective_function" name="objective_function" 
-                       required placeholder="Example: 3,2 (for 3x1 + 2x2)">
-            </div>
-
-            <div class="form-group">
-                <label for="constraints">Constraints:</label>
-                <textarea id="constraints" name="constraints" rows="6" 
-                          required placeholder="Example: 1 2 <= 20;4 3 <= 30;1 0 >= 0;0 1 >= 0"></textarea>
+                <label>Enter Constraints (each on a new line or separated by semicolons):</label>
+                <textarea name="constraints" rows="4" placeholder="Example:
+1 1 1 <= 10
+2 1 3 <= 15" required></textarea>
             </div>
 
             <button type="submit">Solve</button>
@@ -88,24 +196,23 @@
         {% if result %}
             <div class="result-section">
                 <h2>Solution</h2>
-                <p><strong>Status:</strong> {{ result.status }}</p>
-                
-                {% if result.optimal_value is not None %}
-                    <p><strong>Optimal Value:</strong> {{ result.optimal_value|floatformat:2 }}</p>
-                    <h3>Variables:</h3>
-                    <ul style="list-style: none; padding: 0;">
-                        {% for var in result.variables %}
-                            <li>x{{ forloop.counter }} = {{ var|floatformat:2 }}</li>
-                        {% endfor %}
-                    </ul>
-                    <p><strong>Iterations:</strong> {{ result.iterations }}</p>
+                <p>Optimal Value: {{ result.optimal_value|floatformat:2 }}</p>
+                <p>Variables: {{ result.variables }}</p>
+                <p>Status: {{ result.status }}</p>
+                {% if result.iterations %}
+                    <p>Iterations: {{ result.iterations }}</p>
+                {% endif %}
+
+                {% if simplex_table_url %}
+                    <h3>Simplex Table:</h3>
+                    <img src="{{ simplex_table_url }}" alt="Simplex Table" style="border-radius: 8px;">
                 {% endif %}
             </div>
         {% endif %}
     </div>
 
     <script>
-        // Animate form elements
+        // Animate form elements one by one
         gsap.to(".form-group", {
             opacity: 1,
             y: 0,

@@ -20,6 +20,7 @@
             animation: gradientBG 10s ease infinite;
             overflow: hidden;
         }
+
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -38,6 +39,7 @@
             color: white;
             animation: fadeIn 1.5s ease-out;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -47,6 +49,7 @@
         .nav-links {
             margin-bottom: 20px;
         }
+
         .nav-links a {
             margin: 0 15px;
             text-decoration: none;
@@ -55,6 +58,7 @@
             font-size: 16px;
             transition: color 0.3s;
         }
+
         .nav-links a:hover {
             color: #ffd700;
         }
@@ -71,6 +75,7 @@
             outline: none;
             font-size: 16px;
         }
+
         input::placeholder, textarea::placeholder {
             color: rgba(255, 255, 255, 0.7);
         }
@@ -86,6 +91,7 @@
             cursor: pointer;
             transition: transform 0.3s, background 0.3s;
         }
+
         button:hover {
             background: #ffcc00;
             transform: scale(1.05);
@@ -104,6 +110,39 @@
         .form-group {
             opacity: 0;
             transform: translateY(20px);
+        }
+
+        /* Brief Introduction */
+        .intro-section {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #1e2a3b;
+        }
+
+        .intro-section h2 {
+            color: #ffcc00;
+            font-size: 24px;
+        }
+
+        .intro-section p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Applications Section */
+        .applications-section {
+            background-color: rgba(0, 123, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .applications-section h3 {
+            color: #ff6b6b;
+            font-size: 22px;
         }
 
         /* Responsive */
@@ -130,22 +169,37 @@
             </div>
         {% endif %}
 
+        <div class="intro-section">
+            <h2>What is the Transportation Problem?</h2>
+            <p>The Transportation Problem involves determining the most cost-effective way of transporting goods from multiple suppliers to multiple consumers while satisfying supply and demand constraints.</p>
+        </div>
+
+        <div class="applications-section">
+            <h3>Applications of the Transportation Problem</h3>
+            <ul>
+                <li>Optimizing delivery routes for logistics companies.</li>
+                <li>Reducing transportation costs in supply chain management.</li>
+                <li>Maximizing resource distribution efficiency.</li>
+                <li>Cost minimization in transportation networks.</li>
+            </ul>
+        </div>
+
         <form method="post" action="{% url 'graphapp:solve_transportation' %}">
             {% csrf_token %}
-            
+
             <div class="form-group">
-                <label>Enter cost matrix (semicolon-separated rows, space-separated columns):</label>
-                <textarea name="cost_matrix" rows="4" placeholder="Example: 2 3 1;5 4 8;5 6 8" required></textarea>
+                <label>Enter Supply Values (space-separated):</label>
+                <input type="text" name="supply" placeholder="Example: 50 60 40" required>
             </div>
 
             <div class="form-group">
-                <label>Enter supply values (space-separated):</label>
-                <input type="text" name="supply" placeholder="Example: 20 30 25" required>
+                <label>Enter Demand Values (space-separated):</label>
+                <input type="text" name="demand" placeholder="Example: 30 50 70" required>
             </div>
 
             <div class="form-group">
-                <label>Enter demand values (space-separated):</label>
-                <input type="text" name="demand" placeholder="Example: 10 25 40" required>
+                <label>Enter Cost Matrix (semicolon-separated rows, space-separated columns):</label>
+                <textarea name="cost_matrix" rows="4" placeholder="Example: 2 3 1; 4 6 5; 7 8 3" required></textarea>
             </div>
 
             <button type="submit">Solve</button>
@@ -154,18 +208,8 @@
         {% if result %}
             <div class="result-section">
                 <h2>Solution</h2>
-                <p>Total Cost: {{ result.total_cost|floatformat:2 }}</p>
-                <p>Status: {{ result.status }}</p>
-                
-                {% if cost_matrix_url %}
-                    <h3>Cost Matrix:</h3>
-                    <img src="{{ cost_matrix_url }}" alt="Cost Matrix" style="border-radius: 8px;">
-                {% endif %}
-                
-                {% if solution_matrix_url %}
-                    <h3>Solution Matrix:</h3>
-                    <img src="{{ solution_matrix_url }}" alt="Solution Matrix" style="border-radius: 8px;">
-                {% endif %}
+                <p>Optimal Cost: {{ result.optimal_cost|floatformat:2 }}</p>
+                <p>Optimal Transport Plan: {{ result.transport_plan }}</p>
             </div>
         {% endif %}
     </div>
