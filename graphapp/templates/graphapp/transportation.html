@@ -1,228 +1,520 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transportation Problem Solver</title>
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Transportation Problem Solver{% endblock %}
+
+{% block extra_head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <style>
-        /* Animated Gradient Background */
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(-45deg, #00c6ff, #0072ff, #ff6b6b, #ff3e3e);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-            overflow: hidden;
+{% endblock %}
+
+{% block additional_styles %}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Glassmorphism Card */
-        .solver-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 600px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        .header {
             text-align: center;
-            color: white;
-            animation: fadeIn 1.5s ease-out;
+            padding: 20px 0;
+            margin-bottom: 40px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            color: var(--accent-color);
         }
 
-        /* Navigation Links */
-        .nav-links {
-            margin-bottom: 20px;
-        }
-
-        .nav-links a {
-            margin: 0 15px;
-            text-decoration: none;
-            color: #fff;
-            font-weight: bold;
-            font-size: 16px;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #ffd700;
-        }
-
-        /* Form Inputs */
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            outline: none;
-            font-size: 16px;
-        }
-
-        input::placeholder, textarea::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Button Animation */
-        button {
-            background: #ffd700;
-            color: black;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: transform 0.3s, background 0.3s;
-        }
-
-        button:hover {
-            background: #ffcc00;
-            transform: scale(1.05);
-        }
-
-        /* Result Section */
-        .result-section {
+        .solver-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
             margin-top: 20px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            font-size: 18px;
         }
 
-        /* GSAP Animation for Form */
-        .form-group {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        /* Brief Introduction */
         .intro-section {
-            background-color: rgba(255, 255, 255, 0.3);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            color: #1e2a3b;
+            background: var(--section-bg);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: var(--section-text);
         }
 
         .intro-section h2 {
-            color: #ffcc00;
-            font-size: 24px;
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
         }
 
         .intro-section p {
-            font-size: 18px;
-            line-height: 1.6;
+            font-size: 1.2rem;
+            line-height: 1.8;
         }
 
-        /* Applications Section */
-        .applications-section {
-            background-color: rgba(0, 123, 255, 0.2);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 20px;
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--input-bg);
+            color: var(--input-text);
+            font-size: 1.1rem;
+            outline: none;
+            font-family: monospace;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        textarea::placeholder {
+            color: var(--input-text);
+            opacity: 0.7;
+        }
+
+        button {
+            background: var(--accent-color);
             color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            width: 100%;
         }
 
-        .applications-section h3 {
-            color: #ff6b6b;
-            font-size: 22px;
+        button:hover {
+            transform: scale(1.02);
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
+        .result-section {
+            margin-top: 30px;
+            padding: 30px;
+            background: var(--section-bg);
+            border-radius: 15px;
+            color: var(--section-text);
+        }
+
+        .result-section h2 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .result-section p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+
+        .solution-step {
+            background: var(--step-bg);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        .total-cost {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--step-bg);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--step-bg);
+            border-radius: 10px;
+        }
+
+        .explanation li {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .matrix-example {
+            font-family: monospace;
+            white-space: pre;
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .input-format {
+            background: var(--step-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .input-format h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+        
+        .solution-matrix {
+            font-family: monospace;
+            white-space: pre;
+            background: var(--step-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .route-details {
+            background: var(--step-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .summary-box {
+            background: var(--accent-color);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .summary-box h2 {
+            margin-top: 0;
+        }
+
+        .input-grid {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .input-section {
+            background: var(--step-bg);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .input-section h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .matrix-input {
+            display: grid;
+            gap: 10px;
+        }
+
+        .matrix-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .matrix-cell {
+            width: 80px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        .vector-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .size-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: auto;
+        }
+
+        .size-display {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin: 0 10px;
+        }
+
+        .dimension-text {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
             .solver-container {
-                width: 90%;
+                padding: 20px;
+            }
+
+            .intro-section h2, .result-section h2 {
+                font-size: 1.8rem;
+            }
+
+            .intro-section p, .result-section p {
+                font-size: 1.1rem;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="solver-container">
-        <div class="nav-links">
-            <a href="{% url 'graphapp:home' %}">Graphical Method</a>
-            <a href="{% url 'graphapp:transportation' %}">Transportation Problem</a>
-            <a href="{% url 'graphapp:simplex' %}">Simplex Method</a>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="header">
+            <h1>Transportation Problem Solver</h1>
         </div>
 
-        <h1>Transportation Problem Solver</h1>
+        <div class="solver-container">
+            {% if error %}
+                <div style="color: red; margin-bottom: 15px;">
+                    <strong>Error:</strong> {{ error }}
+                </div>
+            {% endif %}
 
-        {% if error %}
-            <div style="color: red; margin-bottom: 15px;">
-                <strong>Error:</strong> {{ error }}
+            <div class="intro-section">
+                <h2>Transportation Problem</h2>
+                <p>Enter your transportation problem data below:</p>
+                
+                <form method="post" action="{% url 'graphapp:solve_transportation' %}" id="transportForm" onsubmit="return prepareSubmission()">
+                    {% csrf_token %}
+                    <div class="input-grid">
+                        <div class="input-section">
+                            <h3>Problem Size</h3>
+                            <div class="size-controls">
+                                <button type="button" class="control-btn" onclick="decreaseSize()">-</button>
+                                <span class="size-display" id="sizeDisplay">3 × 3</span>
+                                <button type="button" class="control-btn" onclick="increaseSize()">+</button>
+                            </div>
+                        </div>
+
+                        <div class="input-section">
+                            <h3>Cost Matrix</h3>
+                            <div class="matrix-input" id="costMatrix"></div>
+                        </div>
+
+                        <div class="input-section">
+                            <h3>Supply Values</h3>
+                            <div class="vector-input" id="supplyVector"></div>
+                        </div>
+
+                        <div class="input-section">
+                            <h3>Demand Values</h3>
+                            <div class="vector-input" id="demandVector"></div>
+                        </div>
+
+                        <input type="hidden" name="expression" id="finalInput">
+                        <input type="hidden" name="size" id="sizeInput">
+                        <button type="submit">Solve Transportation Problem</button>
+                    </div>
+                </form>
             </div>
-        {% endif %}
 
-        <div class="intro-section">
-            <h2>What is the Transportation Problem?</h2>
-            <p>The Transportation Problem involves determining the most cost-effective way of transporting goods from multiple suppliers to multiple consumers while satisfying supply and demand constraints.</p>
-        </div>
-
-        <div class="applications-section">
-            <h3>Applications of the Transportation Problem</h3>
-            <ul>
-                <li>Optimizing delivery routes for logistics companies.</li>
-                <li>Reducing transportation costs in supply chain management.</li>
-                <li>Maximizing resource distribution efficiency.</li>
-                <li>Cost minimization in transportation networks.</li>
-            </ul>
-        </div>
-
-        <form method="post" action="{% url 'graphapp:solve_transportation' %}">
-            {% csrf_token %}
-
-            <div class="form-group">
-                <label>Enter Supply Values (space-separated):</label>
-                <input type="text" name="supply" placeholder="Example: 50 60 40" required>
-            </div>
-
-            <div class="form-group">
-                <label>Enter Demand Values (space-separated):</label>
-                <input type="text" name="demand" placeholder="Example: 30 50 70" required>
-            </div>
-
-            <div class="form-group">
-                <label>Enter Cost Matrix (semicolon-separated rows, space-separated columns):</label>
-                <textarea name="cost_matrix" rows="4" placeholder="Example: 2 3 1; 4 6 5; 7 8 3" required></textarea>
-            </div>
-
-            <button type="submit">Solve</button>
-        </form>
-
-        {% if result %}
+            {% if result %}
             <div class="result-section">
                 <h2>Solution</h2>
-                <p>Optimal Cost: {{ result.optimal_cost|floatformat:2 }}</p>
-                <p>Optimal Transport Plan: {{ result.transport_plan }}</p>
-            </div>
-        {% endif %}
-    </div>
+                {% for step in result.steps %}
+                    {% if "Cost Matrix:" in step %}
+                        <div class="matrix-display">
+                            <h3>Cost Matrix:</h3>
+                            <pre>{{ step }}</pre>
+                        </div>
+                    {% elif "Supply Values:" in step %}
+                        <div class="vector-display">
+                            <h3>Supply Values:</h3>
+                            <pre>{{ step }}</pre>
+                        </div>
+                    {% elif "Demand Values:" in step %}
+                        <div class="vector-display">
+                            <h3>Demand Values:</h3>
+                            <pre>{{ step }}</pre>
+                        </div>
+                    {% elif "Optimal Transportation Plan:" in step %}
+                        <div class="solution-matrix">
+                            <h3>Optimal Transportation Plan:</h3>
+                            <pre>{{ step }}</pre>
+                        </div>
+                    {% elif "Route:" in step %}
+                        <div class="route-details">{{ step }}</div>
+                    {% endif %}
+                {% endfor %}
 
+                <div class="summary-box">
+                    <h2>Summary</h2>
+                    {% for line in result.explanation %}
+                        <p>{{ line }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
     <script>
-        // Animate form elements one by one
-        gsap.to(".form-group", {
-            opacity: 1,
-            y: 0,
+        let size = 3;
+        const MIN_SIZE = 2;
+        const MAX_SIZE = 6;
+
+        function updateSizeDisplay() {
+            document.getElementById('sizeDisplay').textContent = `${size} × ${size}`;
+            document.getElementById('sizeInput').value = size;
+        }
+
+        function createMatrix() {
+            const matrix = document.getElementById('costMatrix');
+            matrix.innerHTML = '';
+            
+            for (let i = 0; i < size; i++) {
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+                
+                for (let j = 0; j < size; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'matrix-cell';
+                    input.placeholder = `C${i+1}${j+1}`;
+                    input.required = true;
+                    input.step = 'any';
+                    row.appendChild(input);
+                }
+                
+                matrix.appendChild(row);
+            }
+        }
+
+        function createVector(containerId, prefix) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            for (let i = 0; i < size; i++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'matrix-cell';
+                input.placeholder = `${prefix}${i+1}`;
+                input.required = true;
+                input.step = 'any';
+                container.appendChild(input);
+            }
+        }
+
+        function increaseSize() {
+            if (size < MAX_SIZE) {
+                size++;
+                updateSizeDisplay();
+                createMatrix();
+                createVector('supplyVector', 'S');
+                createVector('demandVector', 'D');
+            }
+        }
+
+        function decreaseSize() {
+            if (size > MIN_SIZE) {
+                size--;
+                updateSizeDisplay();
+                createMatrix();
+                createVector('supplyVector', 'S');
+                createVector('demandVector', 'D');
+            }
+        }
+
+        function prepareSubmission() {
+            const values = [];
+            
+            // Get cost matrix values
+            const matrixCells = document.querySelectorAll('#costMatrix input');
+            for (let cell of matrixCells) {
+                if (!cell.value.trim()) {
+                    alert('Please fill in all cost matrix values');
+                    return false;
+                }
+                values.push(parseFloat(cell.value));
+            }
+            
+            // Get supply values
+            const supplyInputs = document.querySelectorAll('#supplyVector input');
+            for (let input of supplyInputs) {
+                if (!input.value.trim()) {
+                    alert('Please fill in all supply values');
+                    return false;
+                }
+                values.push(parseFloat(input.value));
+            }
+            
+            // Get demand values
+            const demandInputs = document.querySelectorAll('#demandVector input');
+            for (let input of demandInputs) {
+                if (!input.value.trim()) {
+                    alert('Please fill in all demand values');
+                    return false;
+                }
+                values.push(parseFloat(input.value));
+            }
+            
+            document.getElementById('finalInput').value = values.join(' ');
+            return true;
+        }
+
+        // Initialize the form
+        updateSizeDisplay();
+        createMatrix();
+        createVector('supplyVector', 'S');
+        createVector('demandVector', 'D');
+
+        // Animate form elements
+        gsap.from(".form-group", {
+            opacity: 0,
+            y: 20,
             duration: 0.8,
             stagger: 0.2,
             ease: "easeOut"
         });
     </script>
-</body>
-</html>
+{% endblock %}

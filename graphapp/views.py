@@ -1,10 +1,12 @@
+import matplotlib
+matplotlib.use('Agg')  # Set the backend to non-interactive 'Agg'
 import matplotlib.pyplot as plt
 import io
 import base64
 import numpy as np
 import re
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from matplotlib.patches import Polygon
 from scipy.spatial import ConvexHull
 from scipy.optimize import linprog
@@ -12,6 +14,9 @@ from scipy.optimize import linprog
 # Graphical Method Views
 def home(request):
     return render(request, 'graphapp/home.html')
+
+def graphical_view(request):
+    return render(request, 'graphapp/graphical.html')
 
 def solve(request):
     if request.method == 'POST':
@@ -45,15 +50,15 @@ def solve(request):
                 b.append(rhs)
 
             graph_url, result = call_solver(c, A, b)
-            return render(request, 'graphapp/home.html', {
+            return render(request, 'graphapp/graphical.html', {
                 'result': result,
                 'graph_url': graph_url,
             })
         except Exception as e:
-            return render(request, 'graphapp/home.html', {
+            return render(request, 'graphapp/graphical.html', {
                 'error': f"Error: {str(e)}"
             })
-    return redirect('graphapp:home')
+    return redirect('graphapp:graphical')
 
 # Transportation Problem Views
 def transportation_view(request):
@@ -62,33 +67,103 @@ def transportation_view(request):
 def solve_transportation(request):
     if request.method == 'POST':
         try:
-            # Parse the cost matrix, supply and demand from POST data.
-            cost_matrix = [
-                list(map(float, row.split()))
-                for row in request.POST['cost_matrix'].split(';')
-                if row.strip()
-            ]
-            supply = list(map(float, request.POST['supply'].split()))
-            demand = list(map(float, request.POST['demand'].split()))
-
-            result = solve_transportation_problem(cost_matrix, supply, demand)
-            cost_matrix_img = plot_matrix(cost_matrix, "Cost Matrix")
-            solution_matrix_img = plot_matrix(
-                result['transport_plan'].tolist() if result['transport_plan'] is not None else [],
-                "Solution Matrix"
-            )
-
-            return render(request, 'graphapp/transportation.html', {
-                'result': result,
-                'cost_matrix_url': cost_matrix_img,
-                'solution_matrix_url': solution_matrix_img
-            })
+            # Get the expression and size from the form
+            expression = request.POST.get('expression', '').strip()
+            size = int(request.POST.get('size', 3))
+            
+            if not expression:
+                raise ValueError("Please enter the transportation problem data")
+            
+            # Split and convert input values to floats
+            numbers = []
+            for num in expression.split():
+                if num.strip():
+                    try:
+                        numbers.append(float(num.strip()))
+                    except ValueError:
+                        raise ValueError(f"Invalid number: {num}")
+            
+            # Validate input size
+            expected_values = size * size + size * 2
+            if len(numbers) != expected_values:
+                raise ValueError(f"Expected {expected_values} values for a {size}x{size} problem, but got {len(numbers)}")
+            
+            # Extract the components
+            matrix_elements = size * size
+            costs = np.array(numbers[:matrix_elements]).reshape(size, size)
+            supply = np.array(numbers[matrix_elements:matrix_elements + size])
+            demand = np.array(numbers[matrix_elements + size:])
+            
+            # Validate supply and demand balance
+            total_supply = sum(supply)
+            total_demand = sum(demand)
+            if abs(total_supply - total_demand) > 1e-10:
+                raise ValueError(f"Total supply ({total_supply}) must equal total demand ({total_demand})")
+            
+            # Solve the transportation problem
+            result = solve_transportation_problem(costs, supply, demand)
+            
+            if result["solution"] is not None:
+                solution_matrix = result["solution"]
+                total_cost = 0
+                solution_steps = []
+                
+                # Format the input problem
+                solution_steps.append("Input Problem:")
+                solution_steps.append("\nCost Matrix:")
+                solution_steps.append(str(np.array2string(costs, precision=2, separator=' ')))
+                
+                solution_steps.append("\nSupply Values:")
+                solution_steps.append(str(np.array2string(supply, precision=2, separator=' ')))
+                
+                solution_steps.append("\nDemand Values:")
+                solution_steps.append(str(np.array2string(demand, precision=2, separator=' ')))
+                
+                # Format the solution
+                solution_steps.append("\nOptimal Transportation Plan:")
+                solution_steps.append(str(np.array2string(solution_matrix, precision=2, separator=' ')))
+                
+                # Calculate and show route details
+                solution_steps.append("\nDetailed Route Information:")
+                for i in range(size):
+                    for j in range(size):
+                        if solution_matrix[i][j] > 0:
+                            route_cost = solution_matrix[i][j] * costs[i][j]
+                            total_cost += route_cost
+                            solution_steps.append(
+                                f"Route: Source {i+1} → Destination {j+1}"
+                                f"\n  • Units: {solution_matrix[i][j]:.2f}"
+                                f"\n  • Cost per unit: ${costs[i][j]:.2f}"
+                                f"\n  • Total route cost: ${route_cost:.2f}"
+                            )
+                
+                # Create the solution dictionary
+                solution = {
+                    'steps': solution_steps,
+                    'total_cost': total_cost,
+                    'explanation': [
+                        "Transportation Problem Solution:",
+                        f"• Total Transportation Cost: ${total_cost:.2f}",
+                        f"• Status: {result['status']}",
+                        "• All supply and demand requirements are satisfied"
+                    ]
+                }
+                
+                return render(request, 'graphapp/transportation.html', {
+                    'result': solution
+                })
+            else:
+                return render(request, 'graphapp/transportation.html', {
+                    'error': f"No feasible solution found. Status: {result['status']}"
+                })
 
         except Exception as e:
             return render(request, 'graphapp/transportation.html', {
                 'error': f"Error: {str(e)}"
             })
-    return redirect('graphapp:transportation')
+    
+    # For GET requests, just show the empty form
+    return render(request, 'graphapp/transportation.html')
 
 # Simplex Method Views
 def simplex_view(request):
@@ -209,40 +284,74 @@ def plot_matrix(matrix, title=""):
     return f"data:image/png;base64,{base64.b64encode(buf.read()).decode('utf-8')}"
 
 def solve_transportation_problem(cost_matrix, supply, demand):
-    cost_matrix = np.array(cost_matrix)
-    supply = np.array(supply)
-    demand = np.array(demand)
+    """
+    Solves the transportation problem using linear programming.
+    """
+    try:
+        # Convert inputs to numpy arrays and ensure they are 2D/1D as needed
+        cost_matrix = np.asarray(cost_matrix, dtype=float)
+        supply = np.asarray(supply, dtype=float).flatten()
+        demand = np.asarray(demand, dtype=float).flatten()
 
-    m, n = cost_matrix.shape
-    c = cost_matrix.flatten()
+        # Get dimensions from the cost matrix shape
+        m, n = cost_matrix.shape if isinstance(cost_matrix, np.ndarray) else (len(supply), len(demand))
+        
+        if m * n == 0:
+            raise ValueError("Invalid dimensions: Cost matrix cannot be empty")
 
-    # Build equality constraints for supply and demand.
-    A_eq = []
-    # For supply constraints: Each row's sum equals supply.
-    for i in range(m):
-        row = [1 if (i * n) <= j < ((i + 1) * n) else 0 for j in range(m * n)]
-        A_eq.append(row)
-    # For demand constraints: Each column's sum equals demand.
-    for j in range(n):
-        col = [1 if (k % n) == j else 0 for k in range(m * n)]
-        A_eq.append(col)
+        # Flatten cost matrix for linprog
+        c = cost_matrix.flatten()
 
-    b_eq = np.concatenate([supply, demand])
+        # Create equality constraints matrix
+        A_eq = []
+        b_eq = []
 
-    result = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=(0, None), method='highs')
+        # Supply constraints
+        for i in range(m):
+            row = np.zeros(m * n)
+            row[i * n:(i + 1) * n] = 1
+            A_eq.append(row)
+            b_eq.append(supply[i])
 
-    if result.success:
-        solution_matrix = result.x.reshape(m, n).round(4)
+        # Demand constraints
+        for j in range(n):
+            row = np.zeros(m * n)
+            row[j::n] = 1
+            A_eq.append(row)
+            b_eq.append(demand[j])
+
+        # Convert to numpy arrays
+        A_eq = np.array(A_eq)
+        b_eq = np.array(b_eq)
+
+        # Solve using linprog
+        result = linprog(
+            c=c,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            method='highs',
+            bounds=(0, None)
+        )
+
+        if result.success:
+            # Ensure the solution is properly reshaped
+            solution_matrix = result.x.reshape((m, n))
+            return {
+                "solution": solution_matrix,
+                "total_cost": result.fun,
+                "status": "Optimal solution found"
+            }
+        else:
+            return {
+                "solution": None,
+                "total_cost": None,
+                "status": result.message
+            }
+    except Exception as e:
         return {
-            "transport_plan": solution_matrix,
-            "optimal_cost": round(result.fun, 4),
-            "status": "Optimal solution found",
-        }
-    else:
-        return {
-            "transport_plan": None,
-            "optimal_cost": None,
-            "status": result.message,
+            "solution": None,
+            "total_cost": None,
+            "status": str(e)
         }
 
 # Graphical Method Helpers
@@ -320,3 +429,6 @@ def plot_constraints(constraints, bounds, feasible_region=None, optimal_vertex=N
     if buf:
         plt.savefig(buf, format='png')
         plt.close()
+
+def applications(request):
+    return render(request, 'graphapp/applications.html')

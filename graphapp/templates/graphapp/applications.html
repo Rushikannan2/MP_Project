@@ -1,0 +1,279 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Real-World Applications{% endblock %}
+
+{% block additional_styles %}
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            font-weight: 500;
+        }
+
+        .applications-grid {
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+
+        .application-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .application-card h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .section {
+            margin: 20px 0;
+        }
+
+        .section h3 {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .section p {
+            margin: 10px 0;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .application-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 15px 0;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .application-image:hover {
+            transform: scale(1.02);
+        }
+
+        .try-button {
+            display: block;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin: 20px auto 0;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            width: calc(100% - 50px);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .try-button:hover {
+            background: var(--hover-color);
+        }
+
+        .steps-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .steps-list li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .steps-list li:before {
+            content: "•";
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            z-index: 1000;
+            font-weight: 600;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-50%) scale(1.1);
+            background: var(--hover-color);
+        }
+
+        .nav-prev {
+            left: 20px;
+        }
+
+        .nav-next {
+            right: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+            background: var(--card-bg);
+            box-shadow: var(--card-shadow);
+        }
+
+        .footer p {
+            margin: 5px 0;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .footer .names {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .footer .copyright {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .application-card {
+                padding: 20px;
+            }
+
+            .application-card h2 {
+                font-size: 1.6rem;
+            }
+
+            .nav-button {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .application-image {
+                height: 200px;
+            }
+
+            .footer {
+                padding: 20px 15px;
+            }
+
+            .footer p {
+                font-size: 1rem;
+            }
+        }
+{% endblock %}
+
+{% block content %}
+    <a href="{% url 'graphapp:home' %}" class="nav-button nav-prev">&lt;</a>
+    <a href="{% url 'graphapp:home' %}" class="nav-button nav-next">&gt;</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>Real-World Applications</h1>
+            <p>Discover how linear programming methods are applied in real-world scenarios to solve complex optimization problems.</p>
+        </div>
+
+        <div class="applications-grid">
+            <!-- AirliftCalc Application Card -->
+            <div class="application-card">
+                <h2>AirliftCalc</h2>
+                <div class="section">
+                    <h3>Introduction</h3>
+                    <p>AirliftCalc is a flight booking and luggage management system that integrates web development with optimization techniques. It simplifies complex tasks using the Simplex Method, ensuring efficient cost calculations based on user's baggage weight.</p>
+                </div>
+                <div class="section">
+                    <h3>How it Works</h3>
+                    <ul class="steps-list">
+                        <li>User Input – The system takes inputs like passenger weight, luggage weight, and flight details.</li>
+                        <li>Optimization Process – It applies the Simplex Method to determine whether the luggage exceeds weight limits and adjusts costs accordingly.</li>
+                        <li>Cost Calculation – If the total weight crosses a predefined threshold, additional charges are applied dynamically.</li>
+                        <li>Booking Confirmation – After optimization, the system finalizes the booking with the appropriate fare.</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <img src="https://imgur.com/5lTaxXG.png" alt="AirliftCalc Interface" class="application-image">
+                </div>
+                <a href="https://airliftcalc.onrender.com" target="_blank" class="try-button">Try AirliftCalc</a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="names">Project Team:</p>
+            <p>Ziya Sheikh</p>
+            <p>V T Rushi Kannan</p>
+            <p>Under the Guidance of:</p>
+            <p>Dr. P Sudarshan Babu</p>
+            <p class="copyright">© 2025 SkyPorter. All rights reserved.</p>
+        </footer>
+    </div>
+{% endblock %} 
