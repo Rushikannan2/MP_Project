@@ -2,15 +2,11 @@
 # exit on error
 set -o errexit
 
-# Install system dependencies
-apt-get update
-apt-get install -y python3-dev build-essential
-
 # Upgrade pip
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install dependencies
-pip install -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 
 # Create static directory if it doesn't exist
 mkdir -p static
