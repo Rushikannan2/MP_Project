@@ -8,83 +8,89 @@
             margin: 0 auto;
             padding: 15px;
             overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             text-align: center;
             padding: 15px 0;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .header h1 {
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            margin-bottom: 20px;
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            margin-bottom: 15px;
             color: var(--accent-color);
             line-height: 1.2;
         }
 
         .header p {
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            line-height: 1.6;
+            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+            line-height: 1.5;
             max-width: 800px;
             margin: 0 auto;
-            padding: 0 15px;
+            padding: 0 10px;
         }
 
         .applications-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
             padding: 10px;
+            margin-bottom: auto;
         }
 
         .application-card {
             background: var(--card-bg);
-            border-radius: 15px;
-            padding: clamp(15px, 3vw, 30px);
+            border-radius: 12px;
+            padding: 15px;
             box-shadow: var(--card-shadow);
             height: fit-content;
+            display: flex;
+            flex-direction: column;
         }
 
         .application-card h2 {
-            font-size: clamp(1.4rem, 3vw, 1.8rem);
-            margin-bottom: 15px;
+            font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+            margin-bottom: 12px;
             color: var(--accent-color);
         }
 
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .section h3 {
-            font-size: clamp(1.1rem, 2vw, 1.3rem);
-            margin-bottom: 10px;
+            font-size: clamp(1rem, 1.8vw, 1.2rem);
+            margin-bottom: 8px;
             color: var(--text-color);
         }
 
         .section p {
-            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
-            line-height: 1.6;
-            margin-bottom: 15px;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            line-height: 1.5;
+            margin-bottom: 12px;
         }
 
         .steps-list {
             padding-left: 20px;
-            margin: 15px 0;
+            margin: 8px 0;
         }
 
         .steps-list li {
-            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
-            margin-bottom: 10px;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            margin-bottom: 6px;
             line-height: 1.4;
         }
 
         .application-image {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             height: auto;
-            border-radius: 10px;
-            margin: 10px auto;
+            border-radius: 8px;
+            margin: 8px auto;
             display: block;
         }
 
@@ -92,14 +98,15 @@
             display: inline-block;
             background: var(--accent-color);
             color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
             text-decoration: none;
-            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
             transition: transform 0.3s;
             text-align: center;
             width: 100%;
             box-sizing: border-box;
+            margin-top: auto;
         }
 
         .try-button:hover {
@@ -108,55 +115,113 @@
 
         .footer {
             text-align: center;
-            padding: clamp(20px, 4vw, 30px) 15px;
-            margin-top: 30px;
+            padding: 15px;
+            margin-top: 20px;
             background: var(--card-bg);
             box-shadow: var(--card-shadow);
-            border-radius: 15px;
+            border-radius: 12px;
         }
 
         .footer p {
-            margin: 6px 0;
-            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+            margin: 4px 0;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
             color: var(--text-color);
         }
 
+        .footer .names {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin: 8px 0;
+            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+        }
+
         .footer .copyright {
-            font-size: clamp(0.8rem, 1.6vw, 1rem);
+            font-size: clamp(0.8rem, 1.5vw, 0.9rem);
             opacity: 0.9;
-            margin-top: 15px;
+            margin-top: 12px;
+        }
+
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 20px;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-prev {
+            left: 15px;
+        }
+
+        .nav-next {
+            right: 15px;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 10px;
+                padding: 10px 5px;
             }
 
             .applications-grid {
                 grid-template-columns: 1fr;
-                gap: 15px;
+                gap: 12px;
             }
 
             .application-card {
-                margin-bottom: 15px;
+                margin-bottom: 12px;
+                padding: 12px;
             }
 
             .application-image {
                 max-width: 100%;
             }
+
+            .nav-button {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+
+            .nav-prev {
+                left: 8px;
+            }
+
+            .nav-next {
+                right: 8px;
+            }
         }
 
         @media (max-width: 480px) {
             .container {
-                padding: 8px;
+                padding: 8px 4px;
             }
 
             .application-card {
-                padding: 15px;
+                padding: 10px;
             }
 
             .footer {
-                padding: 15px 10px;
+                padding: 12px 8px;
+            }
+
+            .nav-button {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
             }
         }
 {% endblock %}
