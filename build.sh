@@ -2,6 +2,13 @@
 # exit on error
 set -o errexit
 
+# Install system dependencies
+apt-get update
+apt-get install -y python3-dev build-essential
+
+# Upgrade pip
+pip install --upgrade pip
+
 # Install dependencies
 pip install -r requirements.txt
 
