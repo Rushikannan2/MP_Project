@@ -224,6 +224,73 @@
                 font-size: 16px;
             }
         }
+
+        .resources-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .resources-section h2 {
+            font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .resource-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .resource-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: clamp(0.85rem, 1.6vw, 1rem);
+            transition: transform 0.3s, background-color 0.3s;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .resource-button:hover {
+            transform: scale(1.02);
+            background-color: var(--hover-color, #0058cc);
+        }
+
+        .resource-button.pdf {
+            background-color: #dc3545;
+        }
+
+        .resource-button.youtube {
+            background-color: #ff0000;
+        }
+
+        .resource-button i {
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .resource-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .resource-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
 {% endblock %}
 
 {% block content %}
@@ -303,6 +370,67 @@
                 <a href="{% url 'graphapp:transportation' %}" class="try-button">Try Transportation Method</a>
             </div>
         </div>
+
+        <div class="resources-section">
+            <h2>Resources</h2>
+            
+            <!-- Graphical Method Resources -->
+            <div class="method-resources">
+                <h3>Graphical Method Resources</h3>
+                <div class="resource-buttons">
+                    <a href="https://drive.google.com/file/d/1eVpWp0QRq4zkskxc8AkOl2573NYEEuSF/view?usp=sharing" target="_blank" class="resource-button pdf">
+                        <i class="fas fa-file-pdf"></i> PDF Guide
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=O6QO3J_85as" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Video Tutorial
+                    </a>
+                </div>
+            </div>
+
+            <!-- Simplex Method Resources -->
+            <div class="method-resources">
+                <h3>Simplex Method Resources</h3>
+                <div class="resource-buttons">
+                    <a href="https://drive.google.com/file/d/1LQ7e_BYU6D9rch0b3VSMD8Tvx322vMMk/view?usp=sharing" target="_blank" class="resource-button pdf">
+                        <i class="fas fa-file-pdf"></i> PDF Guide
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=M8POtpPtQZc" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Video Tutorial
+                    </a>
+                </div>
+            </div>
+
+            <!-- Transportation Method Resources -->
+            <div class="method-resources">
+                <h3>Transportation Method Resources</h3>
+                <div class="resource-buttons">
+                    <a href="https://drive.google.com/file/d/13Xg2b2YQ_lWPYyi6VzUSEg-c378G-a_M/view?usp=sharing" target="_blank" class="resource-button pdf">
+                        <i class="fas fa-file-pdf"></i> PDF Part 1
+                    </a>
+                    <a href="https://drive.google.com/file/d/1Mvqt4viF8LC4wn3YsUalPVk1pI1Fz2Nd/view?usp=sharing" target="_blank" class="resource-button pdf">
+                        <i class="fas fa-file-pdf"></i> PDF Part 2
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=ItOuvM2KmD4" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Vogel's Method
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=ov2TNdzMHow" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> NW Corner Rule
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=f3nItOPywPU" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Least Cost Method
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=KVGEXbmvsfk" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Unbalanced Problems
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=-w2z3MVTcQA" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> MODI Method
+                    </a>
+                    <a href="https://www.youtube.com/watch?v=zN4AE1YjE2I" target="_blank" class="resource-button youtube">
+                        <i class="fab fa-youtube"></i> Degeneracy
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer class="footer">
@@ -313,4 +441,8 @@
         <p>Dr. P Sudarshan Babu</p>
         <p class="copyright">© 2025 AeroSwift. All rights reserved.</p>
     </footer>
+{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}
