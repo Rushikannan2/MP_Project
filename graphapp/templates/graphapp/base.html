@@ -55,19 +55,43 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 2px solid var(--accent-color);
+            padding: 8px 12px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.2rem;
             z-index: 1000;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--card-shadow);
         }
 
         .theme-toggle:hover {
-            transform: scale(1.05);
+            transform: scale(1.1);
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .theme-toggle .sun {
+            display: none;
+        }
+
+        .theme-toggle .moon {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .sun {
+            display: block;
+        }
+
+        [data-theme="dark"] .theme-toggle .moon {
+            display: none;
         }
 
         {% block additional_styles %}{% endblock %}
@@ -75,7 +99,10 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span class="sun">🔆</span>
+        <span class="moon">🌙</span>
+    </button>
     {% block content %}{% endblock %}
 
     <script>
@@ -86,16 +113,24 @@
             body.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             
+            // Update button aria-label based on theme
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.setAttribute('aria-label', `Switch to ${currentTheme === 'dark' ? 'dark' : 'light'} mode`);
+            
             // Dispatch a custom event for theme change
             const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
             document.dispatchEvent(event);
         }
 
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
+        // Check for saved theme preference and set initial state
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
             document.body.setAttribute('data-theme', savedTheme);
-        }
+            
+            // Set initial aria-label
+            const themeToggle = document.querySelector('.theme-toggle');
+            themeToggle.setAttribute('aria-label', `Switch to ${savedTheme === 'dark' ? 'light' : 'dark'} mode`);
+        });
 
         // Listen for theme changes from other pages
         window.addEventListener('storage', function(e) {
