@@ -1,10 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graphical Method Solver</title>
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Graphical Method Solver{% endblock %}
+
+{% block extra_head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+{% endblock %}
+
+{% block additional_styles %}
     <style>
         :root {
             --bg-color: #ffffff;
@@ -195,9 +197,10 @@
             }
         }
     </style>
-</head>
-<body>
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+{% endblock %}
+
+{% block content %}
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
     
     <div class="container">
         <div class="header">
@@ -253,7 +256,9 @@
             {% endif %}
         </div>
     </div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
         // Theme toggle functionality
         function toggleTheme() {
@@ -279,5 +284,4 @@
             ease: "easeOut"
         });
     </script>
-</body>
-</html> 
+{% endblock %} 
