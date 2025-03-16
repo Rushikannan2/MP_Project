@@ -291,6 +291,30 @@
                 justify-content: center;
             }
         }
+
+        .header-gif {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 4px;
+            background: linear-gradient(45deg, #ff8a00, #ff2e7a);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-gif img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-gif {
+                max-width: 100%;
+                margin: 15px auto;
+            }
+        }
 {% endblock %}
 
 {% block content %}
@@ -300,6 +324,9 @@
     <div class="container">
         <div class="header">
             <h1>Linear Programming Methods</h1>
+            <div class="header-gif">
+                <img src="https://drive.google.com/uc?export=view&id=1z-ahJGin9aRCT3tm8IK7c0namiVbsrxr" alt="Linear Programming Methods Animation">
+            </div>
             <p>Explore three powerful methods for solving linear programming problems: Graphical Method, Simplex Method, and Transportation Method.</p>
         </div>
 
