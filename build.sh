@@ -10,9 +10,12 @@ pip install --no-cache-dir -r requirements.txt
 
 # Create static directory if it doesn't exist
 mkdir -p static
-
-# Create staticfiles directory if it doesn't exist
 mkdir -p staticfiles
+
+# Download favicon files
+curl -o static/favicon.ico https://raw.githubusercontent.com/Rushikannan2/MP_Project/main/static/favicon.ico
+curl -o static/favicon-32x32.png https://raw.githubusercontent.com/Rushikannan2/MP_Project/main/static/favicon-32x32.png
+curl -o static/favicon-16x16.png https://raw.githubusercontent.com/Rushikannan2/MP_Project/main/static/favicon-16x16.png
 
 # Collect static files
 python manage.py collectstatic --no-input
