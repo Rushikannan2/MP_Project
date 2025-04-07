@@ -10,7 +10,8 @@ from django.http import HttpResponse, JsonResponse
 from matplotlib.patches import Polygon
 from scipy.spatial import ConvexHull
 from scipy.optimize import linprog
-from pulp import LpMaximize, LpMinimize, LpProblem, LpVariable, LpInteger, lpSum
+from pulp import LpMaximize, LpMinimize, LpProblem, LpVariable, LpInteger, lpSum, value
+import math
 
 # Graphical Method Views
 def home(request):
@@ -525,6 +526,137 @@ def integer_programming(request):
             error_message = str(e)
 
     return render(request, 'graphapp/IntegerProgramming.html', {
+        'result': result,
+        'error_message': error_message
+    })
+
+def fractional_programming(request):
+    result = None
+    error_message = None
+    
+    if request.method == 'POST':
+        try:
+            # Get number of variables and constraints
+            num_vars = int(request.POST.get('num_vars', 0))
+            num_constraints = int(request.POST.get('num_constraints', 0))
+            opt_type = request.POST.get('opt_type')
+
+            # Input validation
+            if num_vars < 1 or num_vars > 10:
+                raise ValueError("Number of variables must be between 1 and 10")
+            if num_constraints < 1 or num_constraints > 10:
+                raise ValueError("Number of constraints must be between 1 and 10")
+            if opt_type not in ['max', 'min']:
+                raise ValueError("Invalid optimization type")
+
+            # Create decision variables (initially continuous)
+            variables = {}
+            for i in range(num_vars):
+                var_name = f"x{i+1}"
+                variables[var_name] = LpVariable(name=var_name, lowBound=0, cat="Continuous")
+
+            # Create the model
+            if opt_type == "max":
+                model = LpProblem(name="Fractional_Programming", sense=LpMaximize)
+            else:
+                model = LpProblem(name="Fractional_Programming", sense=LpMinimize)
+
+            # Add objective function
+            obj_coeffs = []
+            for i in range(num_vars):
+                coeff = request.POST.get(f'obj_coeff_{i}')
+                if coeff is None:
+                    raise ValueError(f"Missing coefficient for variable x{i+1}")
+                try:
+                    obj_coeffs.append(float(coeff))
+                except ValueError:
+                    raise ValueError(f"Invalid coefficient for variable x{i+1}")
+
+            model += lpSum(obj_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)), "Objective_Function"
+
+            # Add constraints
+            for j in range(num_constraints):
+                constraint_coeffs = []
+                for i in range(num_vars):
+                    coeff = request.POST.get(f'constraint_{j}_coeff_{i}')
+                    if coeff is None:
+                        raise ValueError(f"Missing coefficient for constraint {j+1}, variable x{i+1}")
+                    try:
+                        constraint_coeffs.append(float(coeff))
+                    except ValueError:
+                        raise ValueError(f"Invalid coefficient for constraint {j+1}, variable x{i+1}")
+
+                operator = request.POST.get(f'constraint_{j}_operator')
+                if operator not in ['<=', '>=', '=']:
+                    raise ValueError(f"Invalid operator for constraint {j+1}")
+
+                rhs = request.POST.get(f'constraint_{j}_rhs')
+                if rhs is None:
+                    raise ValueError(f"Missing RHS value for constraint {j+1}")
+                try:
+                    rhs = float(rhs)
+                except ValueError:
+                    raise ValueError(f"Invalid RHS value for constraint {j+1}")
+
+                if operator == "<=":
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) <= rhs, f"Constraint_{j+1}"
+                elif operator == ">=":
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) >= rhs, f"Constraint_{j+1}"
+                else:
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) == rhs, f"Constraint_{j+1}"
+
+            # Solve the LP relaxation first
+            model.solve()
+            if model.status != 1:  # 1 means optimal
+                raise ValueError("No feasible solution found")
+
+            # Get initial solution
+            initial_solution = {var.name: value(var) for var in variables.values()}
+            steps = [f"Initial LP Relaxation Solution: {', '.join([f'{var} = {val}' for var, val in initial_solution.items()])}"]
+
+            # Cutting Plane Method
+            iteration = 1
+            while True:
+                # Check if all variables are integer
+                all_integer = True
+                for var in variables.values():
+                    if not value(var).is_integer():
+                        all_integer = False
+                        break
+
+                if all_integer:
+                    break
+
+                # Generate a cut for each fractional variable
+                for var in variables.values():
+                    val = value(var)
+                    if not val.is_integer():
+                        # Add a cut to eliminate the current fractional solution
+                        floor_val = math.floor(val)
+                        model += var <= floor_val, f"Cut_{var.name}_{iteration}"
+                        steps.append(f"Iteration {iteration}: Added cut {var.name} ≤ {floor_val}")
+                        iteration += 1
+
+                # Resolve the model
+                model.solve()
+                if model.status != 1:
+                    raise ValueError("No feasible solution found after adding cuts")
+
+                # Get updated solution
+                current_solution = {var.name: value(var) for var in variables.values()}
+                steps.append(f"Solution after cuts: {', '.join([f'{var} = {val}' for var, val in current_solution.items()])}")
+
+            # Prepare results
+            result = {
+                'variables': {var.name: value(var) for var in variables.values()},
+                'objective_value': value(model.objective),
+                'steps': steps
+            }
+
+        except Exception as e:
+            error_message = str(e)
+
+    return render(request, 'graphapp/fractional_programming.html', {
         'result': result,
         'error_message': error_message
     })

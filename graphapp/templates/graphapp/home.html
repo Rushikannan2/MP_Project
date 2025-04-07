@@ -418,6 +418,28 @@
                 </div>
                 <a href="{% url 'graphapp:integer_programming' %}" class="try-button">Try Integer Programming</a>
             </div>
+
+            <!-- Fractional Programming Card -->
+            <div class="method-card">
+                <h2>Fractional Programming</h2>
+                <div class="method-section">
+                    <h3>Definition</h3>
+                    <p>Fractional programming uses the cutting plane method to solve integer programming problems by iteratively adding constraints to eliminate fractional solutions.</p>
+                </div>
+                <div class="method-section">
+                    <h3>Applications</h3>
+                    <ul class="applications-list">
+                        <li>Production scheduling</li>
+                        <li>Network design</li>
+                        <li>Resource allocation</li>
+                        <li>Facility location</li>
+                    </ul>
+                </div>
+                <div class="method-section">
+                    <img src="https://i.imgur.com/Pe7tz1u.png" alt="Fractional Programming Visualization" class="method-image">
+                </div>
+                <a href="{% url 'graphapp:fractional_programming' %}" class="try-button">Try Fractional Programming</a>
+            </div>
         </div>
 
         <div class="resources-section">

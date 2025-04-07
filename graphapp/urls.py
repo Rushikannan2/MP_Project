@@ -13,4 +13,5 @@ urlpatterns = [
     path('solve-simplex/', views.solve_simplex, name='solve_simplex'),
     path('applications/', views.applications, name='applications'),
     path('integer-programming/', views.integer_programming, name='integer_programming'),
+    path('fractional-programming/', views.fractional_programming, name='fractional_programming'),
 ]
