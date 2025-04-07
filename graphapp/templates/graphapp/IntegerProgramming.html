@@ -11,35 +11,51 @@
 
     .form-group {
         margin-bottom: 20px;
+        background-color: var(--card-bg);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
         color: var(--text-color);
+        font-weight: 500;
     }
 
     .form-group input, .form-group select {
         width: 100%;
-        padding: 8px;
+        padding: 10px;
         border: 1px solid var(--accent-color);
         border-radius: 4px;
         background-color: var(--input-bg);
         color: var(--input-text);
+        margin-bottom: 5px;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--hover-color);
+        box-shadow: 0 0 0 2px rgba(0, 114, 255, 0.2);
     }
 
     .btn {
         background-color: var(--accent-color);
         color: white;
-        padding: 10px 20px;
+        padding: 12px 24px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: all 0.3s;
+        font-size: 1rem;
+        font-weight: 500;
+        width: 100%;
     }
 
     .btn:hover {
         background-color: var(--hover-color);
+        transform: translateY(-2px);
     }
 
     .result-section {
@@ -53,11 +69,13 @@
     .result-section h3 {
         color: var(--text-color);
         margin-bottom: 15px;
+        font-size: 1.5rem;
     }
 
     .result-section p {
         color: var(--text-color);
-        margin: 5px 0;
+        margin: 8px 0;
+        font-size: 1.1rem;
     }
 
     .constraint-inputs {
@@ -65,48 +83,110 @@
         padding: 15px;
         background-color: var(--step-bg);
         border-radius: 4px;
+        border: 1px solid var(--accent-color);
+    }
+
+    .help-text {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+
+    .error-message {
+        color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+    }
+
+    .coefficient-input {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .coefficient-input input {
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .coefficient-input span {
+        color: var(--text-color);
+        font-weight: 500;
+        min-width: 30px;
+    }
+
+    .constraint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .constraint-title {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .constraint-operator {
+        width: 80px !important;
+    }
+
+    .constraint-rhs {
+        width: 120px !important;
     }
 {% endblock %}
 
 {% block content %}
 <div class="container">
     <h1>Integer Programming Solver</h1>
+    <p class="help-text">Enter your integer programming problem details below. All variables must be non-negative integers.</p>
+
+    <div id="error-message" class="error-message"></div>
+
     <form method="post" id="ip-form">
         {% csrf_token %}
         
         <div class="form-group">
-            <label for="num_vars">Number of Decision Variables:</label>
-            <input type="number" id="num_vars" name="num_vars" min="1" required>
+            <label for="num_vars">Number of Decision Variables</label>
+            <input type="number" id="num_vars" name="num_vars" min="1" max="10" required>
+            <p class="help-text">Enter the number of variables in your problem (1-10)</p>
         </div>
 
         <div class="form-group">
-            <label for="opt_type">Optimization Type:</label>
+            <label for="opt_type">Optimization Type</label>
             <select id="opt_type" name="opt_type" required>
                 <option value="max">Maximize</option>
                 <option value="min">Minimize</option>
             </select>
+            <p class="help-text">Choose whether to maximize or minimize the objective function</p>
         </div>
 
         <div id="objective-section" class="form-group">
-            <label>Objective Function Coefficients:</label>
+            <label>Objective Function Coefficients</label>
             <div id="obj-coeffs"></div>
+            <p class="help-text">Enter the coefficients for each variable in the objective function</p>
         </div>
 
         <div class="form-group">
-            <label for="num_constraints">Number of Constraints:</label>
-            <input type="number" id="num_constraints" name="num_constraints" min="1" required>
+            <label for="num_constraints">Number of Constraints</label>
+            <input type="number" id="num_constraints" name="num_constraints" min="1" max="10" required>
+            <p class="help-text">Enter the number of constraints in your problem (1-10)</p>
         </div>
 
         <div id="constraints-section"></div>
 
-        <button type="submit" class="btn">Solve</button>
+        <button type="submit" class="btn">Solve Problem</button>
     </form>
 
     {% if result %}
     <div class="result-section">
         <h3>Optimal Solution</h3>
         {% for var, value in result.variables.items %}
-            <p>{{ var }}: {{ value }}</p>
+            <p>{{ var }} = {{ value }}</p>
         {% endfor %}
         <p>Optimal Objective Function Value: {{ result.objective_value }}</p>
     </div>
@@ -114,22 +194,51 @@
 </div>
 
 <script>
+    function validateInputs() {
+        const numVars = parseInt(document.getElementById('num_vars').value);
+        const numConstraints = parseInt(document.getElementById('num_constraints').value);
+        const errorMessage = document.getElementById('error-message');
+        
+        if (numVars > 10 || numConstraints > 10) {
+            errorMessage.textContent = 'Please limit the number of variables and constraints to 10 or less.';
+            errorMessage.style.display = 'block';
+            return false;
+        }
+        
+        errorMessage.style.display = 'none';
+        return true;
+    }
+
     document.getElementById('num_vars').addEventListener('change', function() {
+        if (!validateInputs()) return;
+        
         const numVars = parseInt(this.value);
         const objCoeffsDiv = document.getElementById('obj-coeffs');
         objCoeffsDiv.innerHTML = '';
         
         for (let i = 0; i < numVars; i++) {
+            const coeffDiv = document.createElement('div');
+            coeffDiv.className = 'coefficient-input';
+            
             const input = document.createElement('input');
             input.type = 'number';
             input.name = `obj_coeff_${i}`;
             input.placeholder = `Coefficient for x${i+1}`;
             input.required = true;
-            objCoeffsDiv.appendChild(input);
+            input.step = 'any';
+            
+            const varLabel = document.createElement('span');
+            varLabel.textContent = `x${i+1}`;
+            
+            coeffDiv.appendChild(input);
+            coeffDiv.appendChild(varLabel);
+            objCoeffsDiv.appendChild(coeffDiv);
         }
     });
 
     document.getElementById('num_constraints').addEventListener('change', function() {
+        if (!validateInputs()) return;
+        
         const numConstraints = parseInt(this.value);
         const constraintsSection = document.getElementById('constraints-section');
         constraintsSection.innerHTML = '';
@@ -138,21 +247,40 @@
             const constraintDiv = document.createElement('div');
             constraintDiv.className = 'constraint-inputs';
             
+            const header = document.createElement('div');
+            header.className = 'constraint-header';
+            header.innerHTML = `<span class="constraint-title">Constraint ${i+1}</span>`;
+            constraintDiv.appendChild(header);
+            
             const coeffsDiv = document.createElement('div');
-            coeffsDiv.innerHTML = `<label>Constraint ${i+1} Coefficients:</label>`;
+            coeffsDiv.className = 'coefficients-container';
             
             const numVars = parseInt(document.getElementById('num_vars').value);
             for (let j = 0; j < numVars; j++) {
+                const coeffDiv = document.createElement('div');
+                coeffDiv.className = 'coefficient-input';
+                
                 const input = document.createElement('input');
                 input.type = 'number';
                 input.name = `constraint_${i}_coeff_${j}`;
                 input.placeholder = `Coefficient for x${j+1}`;
                 input.required = true;
-                coeffsDiv.appendChild(input);
+                input.step = 'any';
+                
+                const varLabel = document.createElement('span');
+                varLabel.textContent = `x${j+1}`;
+                
+                coeffDiv.appendChild(input);
+                coeffDiv.appendChild(varLabel);
+                coeffsDiv.appendChild(coeffDiv);
             }
+            
+            const operatorDiv = document.createElement('div');
+            operatorDiv.style.margin = '10px 0';
             
             const operatorSelect = document.createElement('select');
             operatorSelect.name = `constraint_${i}_operator`;
+            operatorSelect.className = 'constraint-operator';
             operatorSelect.innerHTML = `
                 <option value="<=">≤</option>
                 <option value=">=">≥</option>
@@ -164,11 +292,21 @@
             rhsInput.name = `constraint_${i}_rhs`;
             rhsInput.placeholder = 'RHS value';
             rhsInput.required = true;
+            rhsInput.step = 'any';
+            rhsInput.className = 'constraint-rhs';
+            
+            operatorDiv.appendChild(operatorSelect);
+            operatorDiv.appendChild(rhsInput);
             
             constraintDiv.appendChild(coeffsDiv);
-            constraintDiv.appendChild(operatorSelect);
-            constraintDiv.appendChild(rhsInput);
+            constraintDiv.appendChild(operatorDiv);
             constraintsSection.appendChild(constraintDiv);
+        }
+    });
+
+    document.getElementById('ip-form').addEventListener('submit', function(e) {
+        if (!validateInputs()) {
+            e.preventDefault();
         }
     });
 </script>

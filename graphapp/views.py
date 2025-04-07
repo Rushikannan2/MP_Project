@@ -436,12 +436,22 @@ def applications(request):
 
 def integer_programming(request):
     result = None
+    error_message = None
+    
     if request.method == 'POST':
         try:
             # Get number of variables and constraints
-            num_vars = int(request.POST.get('num_vars'))
-            num_constraints = int(request.POST.get('num_constraints'))
+            num_vars = int(request.POST.get('num_vars', 0))
+            num_constraints = int(request.POST.get('num_constraints', 0))
             opt_type = request.POST.get('opt_type')
+
+            # Input validation
+            if num_vars < 1 or num_vars > 10:
+                raise ValueError("Number of variables must be between 1 and 10")
+            if num_constraints < 1 or num_constraints > 10:
+                raise ValueError("Number of constraints must be between 1 and 10")
+            if opt_type not in ['max', 'min']:
+                raise ValueError("Invalid optimization type")
 
             # Create decision variables
             variables = {}
@@ -456,14 +466,41 @@ def integer_programming(request):
                 model = LpProblem(name="Integer_Programming", sense=LpMinimize)
 
             # Add objective function
-            obj_coeffs = [float(request.POST.get(f'obj_coeff_{i}')) for i in range(num_vars)]
+            obj_coeffs = []
+            for i in range(num_vars):
+                coeff = request.POST.get(f'obj_coeff_{i}')
+                if coeff is None:
+                    raise ValueError(f"Missing coefficient for variable x{i+1}")
+                try:
+                    obj_coeffs.append(float(coeff))
+                except ValueError:
+                    raise ValueError(f"Invalid coefficient for variable x{i+1}")
+
             model += lpSum(obj_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)), "Objective_Function"
 
             # Add constraints
             for j in range(num_constraints):
-                constraint_coeffs = [float(request.POST.get(f'constraint_{j}_coeff_{i}')) for i in range(num_vars)]
+                constraint_coeffs = []
+                for i in range(num_vars):
+                    coeff = request.POST.get(f'constraint_{j}_coeff_{i}')
+                    if coeff is None:
+                        raise ValueError(f"Missing coefficient for constraint {j+1}, variable x{i+1}")
+                    try:
+                        constraint_coeffs.append(float(coeff))
+                    except ValueError:
+                        raise ValueError(f"Invalid coefficient for constraint {j+1}, variable x{i+1}")
+
                 operator = request.POST.get(f'constraint_{j}_operator')
-                rhs = float(request.POST.get(f'constraint_{j}_rhs'))
+                if operator not in ['<=', '>=', '=']:
+                    raise ValueError(f"Invalid operator for constraint {j+1}")
+
+                rhs = request.POST.get(f'constraint_{j}_rhs')
+                if rhs is None:
+                    raise ValueError(f"Missing RHS value for constraint {j+1}")
+                try:
+                    rhs = float(rhs)
+                except ValueError:
+                    raise ValueError(f"Invalid RHS value for constraint {j+1}")
 
                 if operator == "<=":
                     model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) <= rhs, f"Constraint_{j+1}"
@@ -475,6 +512,9 @@ def integer_programming(request):
             # Solve the problem
             model.solve()
 
+            if model.status != 1:  # 1 means optimal
+                raise ValueError("No feasible solution found")
+
             # Prepare results
             result = {
                 'variables': {var.name: var.varValue for var in variables.values()},
@@ -482,6 +522,9 @@ def integer_programming(request):
             }
 
         except Exception as e:
-            messages.error(request, f"Error solving the problem: {str(e)}")
+            error_message = str(e)
 
-    return render(request, 'graphapp/IntegerProgramming.html', {'result': result})
+    return render(request, 'graphapp/IntegerProgramming.html', {
+        'result': result,
+        'error_message': error_message
+    })
