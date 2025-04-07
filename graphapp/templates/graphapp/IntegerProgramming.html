@@ -145,6 +145,12 @@
     <h1>Integer Programming Solver</h1>
     <p class="help-text">Enter your integer programming problem details below. All variables must be non-negative integers.</p>
 
+    {% if error_message %}
+    <div class="error-message" style="display: block;">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
     <div id="error-message" class="error-message"></div>
 
     <form method="post" id="ip-form">
