@@ -9,7 +9,8 @@ urlpatterns = [
     path('solve/', views.solve, name='solve'),
     path('transportation/', views.transportation_view, name='transportation'),
     path('solve-transportation/', views.solve_transportation, name='solve_transportation'),
-    path('simplex/', views.simplex_view, name='simplex'),
+    path('simplex/', views.simplex, name='simplex'),
     path('solve-simplex/', views.solve_simplex, name='solve_simplex'),
     path('applications/', views.applications, name='applications'),
+    path('integer-programming/', views.integer_programming, name='integer_programming'),
 ]

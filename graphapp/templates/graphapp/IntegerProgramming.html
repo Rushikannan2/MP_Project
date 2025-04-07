@@ -1,0 +1,175 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Integer Programming{% endblock %}
+
+{% block additional_styles %}
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-color);
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--accent-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+    }
+
+    .btn {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: var(--hover-color);
+    }
+
+    .result-section {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .result-section h3 {
+        color: var(--text-color);
+        margin-bottom: 15px;
+    }
+
+    .result-section p {
+        color: var(--text-color);
+        margin: 5px 0;
+    }
+
+    .constraint-inputs {
+        margin-bottom: 15px;
+        padding: 15px;
+        background-color: var(--step-bg);
+        border-radius: 4px;
+    }
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Integer Programming Solver</h1>
+    <form method="post" id="ip-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="num_vars">Number of Decision Variables:</label>
+            <input type="number" id="num_vars" name="num_vars" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="opt_type">Optimization Type:</label>
+            <select id="opt_type" name="opt_type" required>
+                <option value="max">Maximize</option>
+                <option value="min">Minimize</option>
+            </select>
+        </div>
+
+        <div id="objective-section" class="form-group">
+            <label>Objective Function Coefficients:</label>
+            <div id="obj-coeffs"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="num_constraints">Number of Constraints:</label>
+            <input type="number" id="num_constraints" name="num_constraints" min="1" required>
+        </div>
+
+        <div id="constraints-section"></div>
+
+        <button type="submit" class="btn">Solve</button>
+    </form>
+
+    {% if result %}
+    <div class="result-section">
+        <h3>Optimal Solution</h3>
+        {% for var, value in result.variables.items %}
+            <p>{{ var }}: {{ value }}</p>
+        {% endfor %}
+        <p>Optimal Objective Function Value: {{ result.objective_value }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.getElementById('num_vars').addEventListener('change', function() {
+        const numVars = parseInt(this.value);
+        const objCoeffsDiv = document.getElementById('obj-coeffs');
+        objCoeffsDiv.innerHTML = '';
+        
+        for (let i = 0; i < numVars; i++) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.name = `obj_coeff_${i}`;
+            input.placeholder = `Coefficient for x${i+1}`;
+            input.required = true;
+            objCoeffsDiv.appendChild(input);
+        }
+    });
+
+    document.getElementById('num_constraints').addEventListener('change', function() {
+        const numConstraints = parseInt(this.value);
+        const constraintsSection = document.getElementById('constraints-section');
+        constraintsSection.innerHTML = '';
+        
+        for (let i = 0; i < numConstraints; i++) {
+            const constraintDiv = document.createElement('div');
+            constraintDiv.className = 'constraint-inputs';
+            
+            const coeffsDiv = document.createElement('div');
+            coeffsDiv.innerHTML = `<label>Constraint ${i+1} Coefficients:</label>`;
+            
+            const numVars = parseInt(document.getElementById('num_vars').value);
+            for (let j = 0; j < numVars; j++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.name = `constraint_${i}_coeff_${j}`;
+                input.placeholder = `Coefficient for x${j+1}`;
+                input.required = true;
+                coeffsDiv.appendChild(input);
+            }
+            
+            const operatorSelect = document.createElement('select');
+            operatorSelect.name = `constraint_${i}_operator`;
+            operatorSelect.innerHTML = `
+                <option value="<=">≤</option>
+                <option value=">=">≥</option>
+                <option value="=">=</option>
+            `;
+            
+            const rhsInput = document.createElement('input');
+            rhsInput.type = 'number';
+            rhsInput.name = `constraint_${i}_rhs`;
+            rhsInput.placeholder = 'RHS value';
+            rhsInput.required = true;
+            
+            constraintDiv.appendChild(coeffsDiv);
+            constraintDiv.appendChild(operatorSelect);
+            constraintDiv.appendChild(rhsInput);
+            constraintsSection.appendChild(constraintDiv);
+        }
+    });
+</script>
+{% endblock %} 

@@ -10,6 +10,7 @@ from django.http import HttpResponse, JsonResponse
 from matplotlib.patches import Polygon
 from scipy.spatial import ConvexHull
 from scipy.optimize import linprog
+from pulp import LpMaximize, LpMinimize, LpProblem, LpVariable, LpInteger, lpSum
 
 # Graphical Method Views
 def home(request):
@@ -432,3 +433,55 @@ def plot_constraints(constraints, bounds, feasible_region=None, optimal_vertex=N
 
 def applications(request):
     return render(request, 'graphapp/applications.html')
+
+def integer_programming(request):
+    result = None
+    if request.method == 'POST':
+        try:
+            # Get number of variables and constraints
+            num_vars = int(request.POST.get('num_vars'))
+            num_constraints = int(request.POST.get('num_constraints'))
+            opt_type = request.POST.get('opt_type')
+
+            # Create decision variables
+            variables = {}
+            for i in range(num_vars):
+                var_name = f"x{i+1}"
+                variables[var_name] = LpVariable(name=var_name, lowBound=0, cat=LpInteger)
+
+            # Create the model
+            if opt_type == "max":
+                model = LpProblem(name="Integer_Programming", sense=LpMaximize)
+            else:
+                model = LpProblem(name="Integer_Programming", sense=LpMinimize)
+
+            # Add objective function
+            obj_coeffs = [float(request.POST.get(f'obj_coeff_{i}')) for i in range(num_vars)]
+            model += lpSum(obj_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)), "Objective_Function"
+
+            # Add constraints
+            for j in range(num_constraints):
+                constraint_coeffs = [float(request.POST.get(f'constraint_{j}_coeff_{i}')) for i in range(num_vars)]
+                operator = request.POST.get(f'constraint_{j}_operator')
+                rhs = float(request.POST.get(f'constraint_{j}_rhs'))
+
+                if operator == "<=":
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) <= rhs, f"Constraint_{j+1}"
+                elif operator == ">=":
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) >= rhs, f"Constraint_{j+1}"
+                else:
+                    model += lpSum(constraint_coeffs[i] * variables[f"x{i+1}"] for i in range(num_vars)) == rhs, f"Constraint_{j+1}"
+
+            # Solve the problem
+            model.solve()
+
+            # Prepare results
+            result = {
+                'variables': {var.name: var.varValue for var in variables.values()},
+                'objective_value': model.objective.value()
+            }
+
+        except Exception as e:
+            messages.error(request, f"Error solving the problem: {str(e)}")
+
+    return render(request, 'graphapp/IntegerProgramming.html', {'result': result})
