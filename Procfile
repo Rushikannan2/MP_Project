@@ -1,1 +1,1 @@
-web: gunicorn MP.wsgi:application 
+web: gunicorn graphapp.wsgi:application --timeout 120 
